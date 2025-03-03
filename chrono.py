@@ -13,6 +13,7 @@ class Chronometre:
         self.start_time = 0
         self.elapsed_time = 0
         self.rang = 1  # Compteur du classement
+        self.last_times = []  # Stocke les derniers temps enregistrés
 
         # Affichage du temps
         self.label = ttk.Label(root, text="00:00:00.00", font=("Helvetica", 30))
@@ -40,6 +41,13 @@ class Chronometre:
 
         self.export_button = ttk.Button(button_frame, text="Ouvrir CSV", command=self.open_csv)
         self.export_button.grid(row=0, column=5, padx=5)
+
+        # Liste des derniers temps enregistrés
+        self.last_times_label = ttk.Label(root, text="Derniers temps enregistrés :", font=("Helvetica", 14))
+        self.last_times_label.pack(pady=5)
+
+        self.last_times_listbox = tk.Listbox(root, height=5, font=("Helvetica", 12))
+        self.last_times_listbox.pack(pady=5)
 
         # Forcer le focus sur la fenêtre principale pour éviter les problèmes avec Espace
         self.root.focus_set()
@@ -89,6 +97,8 @@ class Chronometre:
         self.elapsed_time = 0
         self.rang = 1  # Réinitialise le classement
         self.display_time()
+        self.last_times_listbox.delete(0, tk.END)  # Effacer la liste des derniers temps
+        self.last_times = []
         self.root.focus_set()  # Remet le focus sur la fenêtre
 
     def save_time(self):
@@ -111,7 +121,20 @@ class Chronometre:
             txt_file.write(f"{rang_txt} - {temps} - Dossard: ? - {date_heure}\n")
 
         self.rang += 1  # Augmenter le compteur du classement
+        self.update_last_times(rang_txt, temps)  # Met à jour la liste des derniers temps
         self.root.focus_set()  # Remet le focus sur la fenêtre
+
+    def update_last_times(self, rang, temps):
+        """Met à jour la liste des derniers temps affichés."""
+        entry = f"{rang} - {temps}"
+        self.last_times.insert(0, entry)  # Ajoute en haut de la liste
+        if len(self.last_times) > 5:  # Garde seulement les 5 derniers temps
+            self.last_times.pop()
+
+        # Mise à jour de l'affichage
+        self.last_times_listbox.delete(0, tk.END)
+        for item in self.last_times:
+            self.last_times_listbox.insert(tk.END, item)
 
     def reset_file(self):
         """Efface les résultats enregistrés après confirmation."""
