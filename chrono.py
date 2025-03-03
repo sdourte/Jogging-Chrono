@@ -2,6 +2,8 @@ import time
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
+import csv
+import os
 
 class Chronometre:
     def __init__(self, root):
@@ -31,6 +33,9 @@ class Chronometre:
 
         self.clear_file_button = ttk.Button(root, text="Reset fichier", command=self.reset_file)
         self.clear_file_button.pack(side=tk.LEFT, padx=5)
+
+        self.export_button = ttk.Button(root, text="Ouvrir CSV", command=self.open_csv)
+        self.export_button.pack(side=tk.LEFT, padx=5)
 
         self.update_chrono()
 
@@ -73,11 +78,17 @@ class Chronometre:
 
         # Construire la ligne à enregistrer (sans dossard)
         temps = self.label.cget("text")
-        ligne = f"{rang_txt} - {temps} - Dossard: ? - Le {date_heure}\n"
+        ligne = [rang_txt, temps, "?", date_heure]
 
-        # Sauvegarde dans le fichier
-        with open("Temps_arrivees.txt", "a") as file:
-            file.write(ligne)
+        # Sauvegarde dans un fichier CSV
+        with open("Temps_arrivees.csv", "a", newline="") as file:
+            writer = csv.writer(file, delimiter=";")
+            writer.writerow(ligne)
+            
+        # Sauvegarde aussi dans un fichier TXT pour backup
+        with open("Temps_arrivees.txt", "a") as txt_file:
+            txt_file.write(f"{rang_txt} - {temps} - Dossard: ? - {date_heure}\n")
+
 
         self.rang += 1  # Augmenter le compteur du classement
 
@@ -85,9 +96,16 @@ class Chronometre:
         # Demander confirmation avant de supprimer les données
         confirmation = messagebox.askyesno("Confirmation", "Voulez-vous vraiment effacer les résultats ?")
         if confirmation:
-            with open("Temps_arrivees.txt", "w") as file:
-                file.write("")  # On vide le fichier
+            with open("Temps_arrivees.csv", "w", newline="") as file:
+                writer = csv.writer(file, delimiter=";")
+                writer.writerow(["Classement", "Temps", "Dossard", "Date/Heure"])  # Réécrit l'en-tête
             messagebox.showinfo("Réinitialisation", "Le fichier a été vidé avec succès.")
+
+    def open_csv(self):
+        if os.path.exists("Temps_arrivees.csv"):
+            os.startfile("Temps_arrivees.csv")  # Ouvre le fichier sur Windows
+        else:
+            messagebox.showerror("Erreur", "Aucun fichier de résultats trouvé.")
 
 # Lancer l'application
 root = tk.Tk()
