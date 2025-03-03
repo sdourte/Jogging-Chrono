@@ -19,6 +19,7 @@ class Chronometre:
         self.elapsed_time = 0
         self.rang = 1  # Compteur du classement
         self.last_times = []  # Stocke les derniers temps enregistrés
+        self.previous_time = None  # Stocke le dernier temps enregistré pour calculer le delta
         
         # Frame principale pour centrer les éléments
         self.main_frame = ctk.CTkFrame(root)
@@ -110,31 +111,50 @@ class Chronometre:
         self.root.focus_set()  # Remet le focus sur la fenêtre
 
     def save_time(self):
-        """Sauvegarde le temps actuel dans un fichier CSV et TXT."""
+        """Sauvegarde le temps actuel dans un fichier CSV et TXT avec un delta."""
         date_heure = datetime.now().strftime("%d/%m/%Y à %H:%M:%S")
 
         # Définir le classement en format : 1er, 2e, 3e, etc.
         rang_txt = "1er" if self.rang == 1 else f"{self.rang}e"
 
         temps = self.label.cget("text")
-        ligne = [rang_txt, temps, "?", date_heure]
+
+        # Conversion du temps en secondes pour calculer le delta
+        def convert_to_seconds(time_str):
+            h, m, s, cs = map(int, time_str.replace(":", " ").replace(".", " ").split())  
+            return h * 3600 + m * 60 + s + cs / 100  # Ajout des centièmes de seconde
+        
+        current_time_seconds = convert_to_seconds(temps)
+        
+        if self.previous_time is None:
+            delta = "—"  # Pas de delta pour le premier coureur
+        else:
+            delta_seconds = current_time_seconds - self.previous_time
+            delta_h = int(delta_seconds // 3600)
+            delta_m = int((delta_seconds % 3600) // 60)
+            delta_s = delta_seconds % 60
+            delta = f"{delta_h:02}:{delta_m:02}:{delta_s:05.2f}"  # Format hh:mm:ss.ss
+
+        self.previous_time = current_time_seconds  # Met à jour le dernier temps enregistré
+
+        ligne = [rang_txt, temps, delta, date_heure]
 
         # Sauvegarde dans un fichier CSV
         with open("Temps_arrivees.csv", "a", newline="") as file:
             writer = csv.writer(file, delimiter=";")
             writer.writerow(ligne)
 
-        # Sauvegarde aussi dans un fichier TXT pour backup
-        with open("Temps_arrivees.txt", "a") as txt_file:
-            txt_file.write(f"{rang_txt} - {temps} - Dossard: ? - {date_heure}\n")
+        # Sauvegarde aussi dans un fichier TXT pour backup (en UTF-8)
+        with open("Temps_arrivees.txt", "a", encoding="utf-8") as txt_file:
+            txt_file.write(f"Place : {rang_txt} - Temps : {temps} - Delta : {delta} - Date & Heure : {date_heure}\n")
 
         self.rang += 1  # Augmenter le compteur du classement
-        self.update_last_times(rang_txt, temps)  # Met à jour la liste des derniers temps
+        self.update_last_times(rang_txt, temps, delta)  # Met à jour la liste des derniers temps
         self.root.focus_set()  # Remet le focus sur la fenêtre
 
-    def update_last_times(self, rang, temps):
-        """Met à jour la liste des derniers temps affichés."""
-        entry = f"{rang} - {temps}"
+    def update_last_times(self, rang, temps, delta):
+        """Met à jour la liste des derniers temps affichés avec le delta."""
+        entry = f"Place : {rang} - Temps : {temps} - Delta : {delta}"
         self.last_times.insert(0, entry)  # Ajoute en haut de la liste
         if len(self.last_times) > 5:  # Garde seulement les 5 derniers temps
             self.last_times.pop()
