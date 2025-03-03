@@ -1,9 +1,14 @@
 import time
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 from datetime import datetime
+import customtkinter as ctk
 import csv
 import os
+
+# Configuration de customtkinter
+ctk.set_appearance_mode("dark")  # Thème sombre
+ctk.set_default_color_theme("blue")  # Couleur des boutons
 
 class Chronometre:
     def __init__(self, root):
@@ -14,44 +19,47 @@ class Chronometre:
         self.elapsed_time = 0
         self.rang = 1  # Compteur du classement
         self.last_times = []  # Stocke les derniers temps enregistrés
+        
+        # Frame principale pour centrer les éléments
+        self.main_frame = ctk.CTkFrame(root)
+        self.main_frame.pack(expand=True, fill="both")
+        
+        # Grand titre
+        self.title_label = ctk.CTkLabel(self.main_frame, text="🏃 Chronomètre - Jogging 🏃",
+                                        font=("Arial", 40, "bold"), text_color="cyan")
+        self.title_label.pack(pady=10)
 
         # Affichage du temps
-        self.label = ttk.Label(root, text="00:00:00.00", font=("Helvetica", 30))
+        self.label = ctk.CTkLabel(self.main_frame, text="00:00:00.00", font=("Courier", 100, "bold"), text_color="white")
         self.label.pack(pady=20)
 
         # Conteneur pour les boutons
-        button_frame = tk.Frame(root)
+        button_frame = ctk.CTkFrame(self.main_frame)
         button_frame.pack(pady=10)
 
         # Boutons
-        self.start_button = ttk.Button(button_frame, text="Go", command=self.start)
+        self.start_button = ctk.CTkButton(button_frame, text="▶️ Go", command=self.start)
         self.start_button.grid(row=0, column=0, padx=5)
 
-        self.stop_button = ttk.Button(button_frame, text="Stop", command=self.stop)
+        self.stop_button = ctk.CTkButton(button_frame, text="⏹ Stop", command=self.stop)
         self.stop_button.grid(row=0, column=1, padx=5)
 
-        self.reset_button = ttk.Button(button_frame, text="Reset chrono", command=self.reset)
+        self.reset_button = ctk.CTkButton(button_frame, text="🔄 Reset", command=self.reset)
         self.reset_button.grid(row=0, column=2, padx=5)
 
-        self.save_button = ttk.Button(button_frame, text="Save time", command=self.save_time)
+        self.save_button = ctk.CTkButton(button_frame, text="💾 Save", command=self.save_time)
         self.save_button.grid(row=0, column=3, padx=5)
 
-        self.clear_file_button = ttk.Button(button_frame, text="Reset fichier", command=self.reset_file)
-        self.clear_file_button.grid(row=0, column=4, padx=5)
-
-        self.export_button = ttk.Button(button_frame, text="Ouvrir CSV", command=self.open_csv)
-        self.export_button.grid(row=0, column=5, padx=5)
-
         # Liste des derniers temps enregistrés
-        self.last_times_label = ttk.Label(root, text="Derniers temps enregistrés :", font=("Helvetica", 14))
+        self.last_times_label = ctk.CTkLabel(self.main_frame, text="Derniers temps :", font=("Arial", 14))
         self.last_times_label.pack(pady=5)
 
-        self.last_times_listbox = tk.Listbox(root, height=5, font=("Helvetica", 12))
+        self.last_times_listbox = ctk.CTkTextbox(self.main_frame, height=100, width=400)
         self.last_times_listbox.pack(pady=5)
 
         # Forcer le focus sur la fenêtre principale pour éviter les problèmes avec Espace
         self.root.focus_set()
-
+        
         self.update_chrono()
         self.bind_keys()  # Ajout des raccourcis clavier
 
@@ -77,7 +85,7 @@ class Chronometre:
         secondes = int(self.elapsed_time) % 60
         minutes = (int(self.elapsed_time) // 60) % 60
         heures = int(self.elapsed_time) // 3600
-        self.label.config(text=f"{heures:02}:{minutes:02}:{secondes:02}.{centiemes:02}")
+        self.label.configure(text=f"{heures:02}:{minutes:02}:{secondes:02}.{centiemes:02}")
 
     def start(self):
         """Démarre le chronomètre et enlève le focus des boutons."""
@@ -97,7 +105,7 @@ class Chronometre:
         self.elapsed_time = 0
         self.rang = 1  # Réinitialise le classement
         self.display_time()
-        self.last_times_listbox.delete(0, tk.END)  # Effacer la liste des derniers temps
+        self.last_times_listbox.delete("0.0", "end")  # Effacer la liste des derniers temps
         self.last_times = []
         self.root.focus_set()  # Remet le focus sur la fenêtre
 
@@ -132,29 +140,11 @@ class Chronometre:
             self.last_times.pop()
 
         # Mise à jour de l'affichage
-        self.last_times_listbox.delete(0, tk.END)
+        self.last_times_listbox.delete("0.0", "end")
         for item in self.last_times:
-            self.last_times_listbox.insert(tk.END, item)
-
-    def reset_file(self):
-        """Efface les résultats enregistrés après confirmation."""
-        confirmation = messagebox.askyesno("Confirmation", "Voulez-vous vraiment effacer les résultats ?")
-        if confirmation:
-            with open("Temps_arrivees.csv", "w", newline="") as file:
-                writer = csv.writer(file, delimiter=";")
-                writer.writerow(["Classement", "Temps", "Dossard", "Date/Heure"])  # Réécrit l'en-tête
-            messagebox.showinfo("Réinitialisation", "Le fichier a été vidé avec succès.")
-        self.root.focus_set()  # Remet le focus sur la fenêtre
-
-    def open_csv(self):
-        """Ouvre le fichier CSV contenant les résultats."""
-        if os.path.exists("Temps_arrivees.csv"):
-            os.startfile("Temps_arrivees.csv")  # Ouvre le fichier sur Windows
-        else:
-            messagebox.showerror("Erreur", "Aucun fichier de résultats trouvé.")
-        self.root.focus_set()  # Remet le focus sur la fenêtre
+            self.last_times_listbox.insert("end", item + "\n")
 
 # Lancer l'application
-root = tk.Tk()
+root = ctk.CTk()
 chronometre = Chronometre(root)
 root.mainloop()
