@@ -5,6 +5,8 @@ from datetime import datetime
 import customtkinter as ctk
 import csv
 import os
+import winsound
+import threading
 
 # Configuration de customtkinter
 ctk.set_appearance_mode("dark")  # Thème sombre
@@ -114,6 +116,11 @@ class Chronometre:
         self.last_times = []
         self.root.focus_set()  # Remet le focus sur la fenêtre
 
+    def play_sound(self):
+        """Joue un son en arrière-plan sans bloquer le programme."""
+        # Utilisation d'un thread pour jouer le son sans bloquer le programme
+        threading.Thread(target=lambda: winsound.Beep(1000, 500), daemon=True).start()
+
     def save_time(self):
         """Sauvegarde le temps actuel dans un fichier CSV et TXT avec un delta."""
         date_heure = datetime.now().strftime("%d/%m/%Y à %H:%M:%S")
@@ -142,6 +149,10 @@ class Chronometre:
         self.previous_time = current_time_seconds  # Met à jour le dernier temps enregistré
 
         ligne = [rang_txt, temps, delta, date_heure]
+        
+        # Joue un bip de 1000 Hz pendant 500 ms
+        self.play_sound()
+        print("✅ Son joué avec succès (mais inaudible si volume coupé)")
 
         # Sauvegarde dans un fichier CSV
         with open("Temps_arrivees.csv", "a", newline="") as file:
