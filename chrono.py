@@ -50,6 +50,10 @@ class Chronometre:
 
         self.save_button = ctk.CTkButton(button_frame, text="💾 Save", command=self.save_time)
         self.save_button.grid(row=0, column=3, padx=5)
+        
+        # Bouton pour changer le thème
+        self.theme_button = ctk.CTkButton(button_frame, text="Switch theme", command=self.toggle_theme)
+        self.theme_button.grid(row=0, column=4, padx=5)
 
         # Liste des derniers temps enregistrés
         self.last_times_label = ctk.CTkLabel(self.main_frame, text="Derniers temps :", font=("Arial", 14))
@@ -151,6 +155,18 @@ class Chronometre:
         self.rang += 1  # Augmenter le compteur du classement
         self.update_last_times(rang_txt, temps, delta)  # Met à jour la liste des derniers temps
         self.root.focus_set()  # Remet le focus sur la fenêtre
+    
+    def toggle_theme(self):
+        """Bascule entre le mode clair et sombre."""
+        current_mode = ctk.get_appearance_mode()
+        if current_mode == "Light":
+            ctk.set_appearance_mode("dark")
+            self.label.configure(text_color="white")
+            self.title_label.configure(text_color="white")
+        else:
+            ctk.set_appearance_mode("light")
+            self.label.configure(text_color="black")
+            self.title_label.configure(text_color="black")
 
     def update_last_times(self, rang, temps, delta):
         """Met à jour la liste des derniers temps affichés avec le delta."""
