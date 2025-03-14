@@ -151,8 +151,7 @@ class Chronometre:
         ligne = [rang_txt, temps, delta, date_heure]
         
         # Joue un bip de 1000 Hz pendant 500 ms
-        self.play_sound()
-        print("✅ Son joué avec succès (mais inaudible si volume coupé)")
+        #self.play_sound()
 
         # Sauvegarde dans un fichier CSV
         with open("Temps_arrivees.csv", "a", newline="") as file:
